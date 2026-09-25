@@ -1,0 +1,270 @@
+# Aegis PQC — binary cryptographic knowledge base
+#
+# Maps structures found inside compiled artefacts to cryptographic primitives.
+#
+# SCOPE DISCIPLINE
+# ----------------
+# Entries must be *structural* — a library soname, an exported symbol name, a
+# version banner with a recognisable shape. Never a bare algorithm word found
+# loose in the string table.
+#
+# A compiled binary contains enormous quantities of incidental text: file
+# paths, error messages, format strings, fragments of unrelated data. Matching
+# the word "RSA" anywhere in that would fire constantly. Matching the symbol
+# `RSA_generate_key_ex` in the import table is evidence.
+#
+# SECTIONS
+#   libraries        Dynamic dependency sonames and PE import names.
+#   symbol_exact     Imported symbols with a fixed meaning.
+#   symbol_patterns  Regular expressions over symbol names, for families whose
+#                    naming encodes the algorithm, key size, or mode.
+#   version_strings  Regular expressions identifying a library and its version.
+
+libraries:
+
+  libcrypto:
+    name: OpenSSL libcrypto
+    provides: [RSA, ECDSA, ECDH, DSA, Diffie-Hellman, AES, DES, SHA-2, MD5]
+    role: multi
+    note: General-purpose cryptographic library; capabilities follow from the symbols used.
+
+  libssl:
+    name: OpenSSL libssl
+    provides: [TLS, RSA, ECDHE]
+    role: protocol
+
+  libcrypt:
+    name: libcrypt
+    provides: [Password hashing]
+    role: password_hashing
+    note: Password hashing; not affected by the quantum key-establishment threat.
+
+  libgcrypt:
+    name: Libgcrypt
+    provides: [RSA, DSA, ECDSA, AES, SHA-2]
+    role: multi
+
+  libsodium:
+    name: libsodium
+    provides: [X25519, Ed25519, XSalsa20, Poly1305]
+    role: multi
+
+  libmbedtls:
+    name: Mbed TLS
+    provides: [RSA, ECDSA, AES, SHA-2, TLS]
+    role: multi
+
+  libnettle:
+    name: Nettle
+    provides: [RSA, AES, SHA-2]
+    role: multi
+
+  bcrypt:
+    name: Windows CNG (bcrypt)
+    provides: [RSA, ECDSA, AES, SHA-2]
+    role: multi
+    note: Windows Cryptography API Next Generation.
+
+symbol_exact:
+
+  RSA_new:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  RSA_generate_key_ex:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  RSA_public_encrypt:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  RSA_private_decrypt:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  RSA_sign:
+    algorithm: RSA
+    family: RSA
+    role: signature
+  EVP_PKEY_CTX_set_rsa_keygen_bits:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  EC_KEY_new:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  EC_KEY_generate_key:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  ECDSA_do_sign:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  ECDH_compute_key:
+    algorithm: ECDH
+    family: Elliptic curve
+    role: key_establishment
+  DH_generate_key:
+    algorithm: Diffie-Hellman
+    family: Finite field
+    role: key_establishment
+  DSA_generate_key:
+    algorithm: DSA
+    family: Finite field
+    role: signature
+  X25519:
+    algorithm: X25519
+    family: Elliptic curve
+    role: key_establishment
+  ED25519_sign:
+    algorithm: Ed25519
+    family: Elliptic curve
+    role: signature
+  MD5_Init:
+    algorithm: MD5
+    family: Hash
+    role: hash
+    legacy: true
+  SHA1_Init:
+    algorithm: SHA-1
+    family: Hash
+    role: hash
+    legacy: true
+  SHA256_Init:
+    algorithm: SHA-256
+    family: Hash
+    role: hash
+  SHA512_Init:
+    algorithm: SHA-512
+    family: Hash
+    role: hash
+  EVP_md5:
+    algorithm: MD5
+    family: Hash
+    role: hash
+    legacy: true
+  EVP_sha1:
+    algorithm: SHA-1
+    family: Hash
+    role: hash
+    legacy: true
+  EVP_sha256:
+    algorithm: SHA-256
+    family: Hash
+    role: hash
+  EVP_sha384:
+    algorithm: SHA-384
+    family: Hash
+    role: hash
+  EVP_sha512:
+    algorithm: SHA-512
+    family: Hash
+    role: hash
+  SSL_CTX_new:
+    algorithm: TLS
+    family: Protocol
+    role: protocol
+  TLS_client_method:
+    algorithm: TLS
+    family: Protocol
+    role: protocol
+  TLS_server_method:
+    algorithm: TLS
+    family: Protocol
+    role: protocol
+  crypto_kem_keypair:
+    algorithm: ML-KEM
+    family: Module lattice
+    role: key_establishment
+    note: Key encapsulation entry point exposed by post-quantum libraries.
+  OQS_KEM_new:
+    algorithm: ML-KEM
+    family: Module lattice
+    role: key_establishment
+    note: Open Quantum Safe key encapsulation interface.
+  BCryptGenerateKeyPair:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+    note: Windows CNG key generation; the algorithm identifier is a runtime argument.
+
+# Symbol families whose naming encodes the algorithm, and often the key size
+# and mode. OpenSSL's EVP cipher constructors follow this shape consistently.
+symbol_patterns:
+
+  evp_aes:
+    pattern: "^EVP_aes_(128|192|256)_([a-z0-9]+)$"
+    algorithm: AES
+    family: Block cipher
+    role: symmetric
+    key_size_group: 1
+    mode_group: 2
+
+  evp_des:
+    pattern: "^EVP_des_(ede3_)?([a-z0-9]+)$"
+    algorithm: DES
+    family: Block cipher
+    role: symmetric
+    mode_group: 2
+    legacy: true
+
+  evp_chacha:
+    pattern: "^EVP_chacha20(_poly1305)?$"
+    algorithm: ChaCha20
+    family: Stream cipher
+    role: symmetric
+
+  sha2_family:
+    pattern: "^SHA(224|256|384|512)_(Init|Update|Final)$"
+    algorithm: SHA-2
+    family: Hash
+    role: hash
+    variant_group: 1
+
+  rsa_family:
+    pattern: "^RSA_[A-Za-z_]+$"
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+
+  ecdsa_family:
+    pattern: "^ECDSA_[A-Za-z_]+$"
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+
+# Version banners. These are the only reliable way to learn which release of a
+# cryptographic library a binary was built against.
+version_strings:
+
+  openssl:
+    pattern: 'OpenSSL\s+(\d+\.\d+\.\d+[a-z]?)'
+    library: OpenSSL
+    version_group: 1
+
+  libressl:
+    pattern: 'LibreSSL\s+(\d+\.\d+\.\d+)'
+    library: LibreSSL
+    version_group: 1
+
+  boringssl:
+    pattern: "BoringSSL"
+    library: BoringSSL
+
+  mbedtls:
+    pattern: 'mbed\s*TLS\s+(\d+\.\d+\.\d+)'
+    library: Mbed TLS
+    version_group: 1
+
+  gnutls:
+    pattern: 'GnuTLS\s+(\d+\.\d+\.\d+)'
+    library: GnuTLS
+    version_group: 1
+
+  libsodium:
+    pattern: 'libsodium\s+(\d+\.\d+\.\d+)'
+    library: libsodium
+    version_group: 1

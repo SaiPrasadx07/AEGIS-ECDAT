@@ -1,0 +1,171 @@
+# Aegis PQC — quantum-risk classification knowledge base
+#
+# Maps cryptographic algorithms to their relationship with a cryptographically
+# relevant quantum computer (CRQC). This is a deterministic, auditable rules
+# layer — not a scoring model.
+#
+# CLASSIFICATION DISCIPLINE
+# -------------------------
+# Every entry states a *category* and a *reason*, never a number. The category
+# is one of:
+#
+#   quantum_vulnerable   Public-key cryptography that a CRQC running Shor's
+#                        algorithm defeats: RSA, finite-field and elliptic-curve
+#                        systems (key establishment and signatures alike).
+#
+#   symmetric_reduced    Symmetric ciphers and hashes. NOT equivalent to the
+#                        public-key case. Grover's algorithm gives at most a
+#                        quadratic speedup, effectively halving the security
+#                        level. AES-256 retains a large margin; a short key or a
+#                        broken hash is a concern for reasons that are mostly
+#                        independent of quantum computing.
+#
+#   post_quantum         NIST post-quantum algorithms designed to resist a CRQC:
+#                        ML-KEM, ML-DSA, SLH-DSA. Designed to resist known
+#                        attacks — not proven unbreakable.
+#
+#   not_applicable       KDFs and MACs whose quantum exposure is governed by
+#                        their underlying hash, assessed separately.
+#
+# An algorithm absent from this file is UNKNOWN and is never guessed. Calling an
+# unfamiliar algorithm "resistant" would be the most dangerous error available.
+#
+# FIELDS
+#   category   One of the four above.
+#   note       One-line human-readable reason, used verbatim in rationales.
+#   grover     (symmetric only) Whether Grover materially reduces the margin.
+
+algorithms:
+
+  # ---- public-key: quantum-vulnerable ----
+  RSA:
+    category: quantum_vulnerable
+    note: RSA relies on integer factorisation, which Shor's algorithm solves in polynomial time on a CRQC.
+  DSA:
+    category: quantum_vulnerable
+    note: DSA relies on the finite-field discrete logarithm, which Shor's algorithm solves on a CRQC.
+  Diffie-Hellman:
+    category: quantum_vulnerable
+    note: Finite-field Diffie-Hellman relies on the discrete logarithm, which Shor's algorithm solves on a CRQC.
+  ECDSA:
+    category: quantum_vulnerable
+    note: ECDSA relies on the elliptic-curve discrete logarithm, which Shor's algorithm solves on a CRQC.
+  ECDH:
+    category: quantum_vulnerable
+    note: Elliptic-curve Diffie-Hellman relies on the elliptic-curve discrete logarithm, which Shor's algorithm solves on a CRQC.
+  X25519:
+    category: quantum_vulnerable
+    note: X25519 is elliptic-curve key agreement; on its own it relies on the elliptic-curve discrete logarithm, which Shor's algorithm solves on a CRQC.
+  Ed25519:
+    category: quantum_vulnerable
+    note: Ed25519 is an elliptic-curve signature; it relies on the elliptic-curve discrete logarithm, which Shor's algorithm solves on a CRQC.
+  Ed448:
+    category: quantum_vulnerable
+    note: Ed448 is an elliptic-curve signature vulnerable to Shor's algorithm on a CRQC.
+  X448:
+    category: quantum_vulnerable
+    note: X448 is elliptic-curve key agreement vulnerable to Shor's algorithm on a CRQC.
+
+  # ---- symmetric and hash: different treatment ----
+  AES:
+    category: symmetric_reduced
+    grover: true
+    note: AES is symmetric; Grover's algorithm at most halves the effective security level. AES-256 retains a wide margin; AES-128 falls to roughly 64-bit quantum work.
+  Triple DES:
+    category: symmetric_reduced
+    grover: true
+    note: Triple DES is a legacy symmetric cipher with a small effective key size, a concern independent of quantum computing.
+  DES:
+    category: symmetric_reduced
+    grover: true
+    note: DES is a broken legacy cipher with a 56-bit key; its weakness is classical, not quantum.
+  ChaCha20:
+    category: symmetric_reduced
+    grover: true
+    note: ChaCha20 is a symmetric stream cipher; Grover's algorithm at most halves its effective security level.
+  ChaCha20-Poly1305:
+    category: symmetric_reduced
+    grover: true
+    note: ChaCha20-Poly1305 is symmetric authenticated encryption; Grover's algorithm at most halves the effective security level.
+
+  MD5:
+    category: symmetric_reduced
+    grover: false
+    note: MD5 is a broken hash; its weaknesses are classical collision attacks, unrelated to quantum computing.
+  SHA-1:
+    category: symmetric_reduced
+    grover: false
+    note: SHA-1 is a deprecated hash with practical classical collisions, unrelated to quantum computing.
+  SHA-2:
+    category: symmetric_reduced
+    grover: true
+    note: SHA-2 is a hash family; Grover-style search at most halves preimage resistance, leaving SHA-256 and above with a substantial margin.
+  SHA-256:
+    category: symmetric_reduced
+    grover: true
+    note: SHA-256 retains a substantial security margin against known quantum search attacks.
+  SHA-384:
+    category: symmetric_reduced
+    grover: true
+    note: SHA-384 retains a substantial security margin against known quantum search attacks.
+  SHA-512:
+    category: symmetric_reduced
+    grover: true
+    note: SHA-512 retains a substantial security margin against known quantum search attacks.
+
+  # ---- KDF / MAC: exposure governed by the underlying primitive ----
+  HKDF:
+    category: not_applicable
+    note: HKDF is a key-derivation function; its quantum exposure follows from its underlying hash rather than a public-key assumption.
+  HMAC:
+    category: not_applicable
+    note: HMAC is a message-authentication code; its quantum exposure follows from its underlying hash rather than a public-key assumption.
+
+  # ---- post-quantum ----
+  ML-KEM:
+    category: post_quantum
+    note: ML-KEM (NIST FIPS 203) is a lattice-based key-encapsulation mechanism designed to resist known classical and quantum attacks.
+  ML-KEM-512:
+    category: post_quantum
+    note: ML-KEM-512 (FIPS 203) is a lattice-based KEM designed to resist known classical and quantum attacks.
+  ML-KEM-768:
+    category: post_quantum
+    note: ML-KEM-768 (FIPS 203) is a lattice-based KEM designed to resist known classical and quantum attacks.
+  ML-KEM-1024:
+    category: post_quantum
+    note: ML-KEM-1024 (FIPS 203) is a lattice-based KEM designed to resist known classical and quantum attacks.
+  ML-DSA:
+    category: post_quantum
+    note: ML-DSA (NIST FIPS 204) is a lattice-based signature scheme designed to resist known classical and quantum attacks.
+  ML-DSA-44:
+    category: post_quantum
+    note: ML-DSA-44 (FIPS 204) is a lattice-based signature designed to resist known classical and quantum attacks.
+  ML-DSA-65:
+    category: post_quantum
+    note: ML-DSA-65 (FIPS 204) is a lattice-based signature designed to resist known classical and quantum attacks.
+  ML-DSA-87:
+    category: post_quantum
+    note: ML-DSA-87 (FIPS 204) is a lattice-based signature designed to resist known classical and quantum attacks.
+  SLH-DSA:
+    category: post_quantum
+    note: SLH-DSA (NIST FIPS 205) is a hash-based signature scheme designed to resist known classical and quantum attacks.
+
+# Protocols are containers whose exposure depends on the cipher suite actually
+# negotiated. They are assessed as "depends on negotiated parameters" rather
+# than assigned a category, because a bare protocol finding does not fix one.
+protocols:
+  TLS:
+    note: TLS exposure depends on the negotiated key-establishment and signature algorithms, which a protocol finding alone does not determine.
+  "TLS 1.2":
+    note: TLS 1.2 commonly negotiates quantum-vulnerable key establishment (ECDHE/RSA), but the specific exposure depends on the negotiated suite.
+  "TLS 1.3":
+    note: TLS 1.3 key establishment is typically ECDHE and therefore quantum-vulnerable unless a post-quantum or hybrid group is negotiated.
+  SSH:
+    note: SSH exposure depends on the negotiated key-exchange and host-key algorithms.
+
+# AES effective-margin notes keyed by key size, used only when the key size was
+# actually observed. Never inferred from anything else.
+symmetric_key_margins:
+  "128": Grover-style search reduces AES-128 to roughly 64-bit quantum work; consider AES-256 for long-lived data.
+  "192": AES-192 retains a substantial margin against known quantum search attacks.
+  "256": AES-256 retains a wide margin against known quantum search attacks.

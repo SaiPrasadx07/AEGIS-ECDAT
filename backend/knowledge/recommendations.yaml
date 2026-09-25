@@ -1,0 +1,189 @@
+# Aegis PQC — remediation recommendation knowledge base
+#
+# Role-aware mappings from a discovered algorithm to a defensible remediation
+# direction. Consumed by the Phase 8 recommendation engine.
+#
+# DISCIPLINE
+# ----------
+# A target is provided only where the mapping is defensible for the specific
+# ROLE. RSA has no single replacement: as key establishment it maps toward
+# ML-KEM; as a signature it maps toward ML-DSA. Encoding the role is what keeps
+# the engine from saying "replace RSA with ML-KEM" for a signature.
+#
+# An entry never encodes a universal replacement, never invents a benchmark, and
+# never claims a post-quantum algorithm is a drop-in for a hash or a KDF.
+#
+# STRUCTURE
+#   key_establishment / signature   Role-specific mappings for public-key algos.
+#   symmetric                       Classical strengthening, not PQC migration.
+#   hash                            Classical/deprecation guidance.
+#   kdf_mac                         No public-key migration indicated.
+#   post_quantum                    Already-PQC; no classical-to-PQC migration.
+#   protocols                       Protocol-dependent guidance.
+#
+# FIELDS
+#   remediation_class   One of the RemediationClass values.
+#   target              Concrete target algorithm/family. Omit where none is
+#                       defensible.
+#   standard            NIST standard for the target, where one applies.
+#   note                One-line rationale, used verbatim.
+
+# Quantum-vulnerable public-key algorithms, mapped by ROLE.
+public_key:
+
+  RSA:
+    key_establishment:
+      remediation_class: hybrid
+      target: ML-KEM-based hybrid key establishment
+      standard: NIST FIPS 203 (ML-KEM)
+      note: RSA key transport is quantum-vulnerable; combining a classical key-establishment mechanism with ML-KEM in a hybrid provides post-quantum protection while retaining classical assurance during transition. The specific hybrid construction and ML-KEM parameter set are an implementation and interoperability decision.
+    signature:
+      remediation_class: pqc_native
+      target: ML-DSA
+      standard: NIST FIPS 204 (ML-DSA)
+      note: RSA signatures are quantum-vulnerable; ML-DSA is a NIST post-quantum signature scheme. SLH-DSA (FIPS 205) is an alternative where a conservative hash-based construction is preferred.
+
+  DSA:
+    signature:
+      remediation_class: pqc_native
+      target: ML-DSA
+      standard: NIST FIPS 204 (ML-DSA)
+      note: DSA signatures are quantum-vulnerable; ML-DSA is a NIST post-quantum signature scheme.
+
+  Diffie-Hellman:
+    key_establishment:
+      remediation_class: hybrid
+      target: ML-KEM-based hybrid key establishment
+      standard: NIST FIPS 203 (ML-KEM)
+      note: Finite-field Diffie-Hellman is quantum-vulnerable; combining it with ML-KEM in a hybrid provides post-quantum key establishment. The ML-KEM parameter set is an implementation and interoperability decision.
+
+  ECDSA:
+    signature:
+      remediation_class: pqc_native
+      target: ML-DSA
+      standard: NIST FIPS 204 (ML-DSA)
+      note: ECDSA signatures are quantum-vulnerable; ML-DSA is a NIST post-quantum signature scheme.
+
+  ECDH:
+    key_establishment:
+      remediation_class: hybrid
+      target: ML-KEM-based hybrid key establishment
+      standard: NIST FIPS 203 (ML-KEM)
+      note: Elliptic-curve Diffie-Hellman is quantum-vulnerable; combining a classical elliptic-curve exchange with ML-KEM in a hybrid provides post-quantum key establishment. The specific construction and ML-KEM parameter set are an implementation and interoperability decision.
+
+  X25519:
+    key_establishment:
+      remediation_class: hybrid
+      target: ML-KEM-based hybrid key establishment
+      standard: NIST FIPS 203 (ML-KEM)
+      note: X25519 key agreement is quantum-vulnerable on its own; a hybrid pairing the existing X25519 mechanism with ML-KEM is a defensible migration direction. The ML-KEM parameter set is an implementation and interoperability decision.
+
+  Ed25519:
+    signature:
+      remediation_class: pqc_native
+      target: ML-DSA
+      standard: NIST FIPS 204 (ML-DSA)
+      note: Ed25519 signatures are quantum-vulnerable; ML-DSA is a NIST post-quantum signature scheme.
+
+  Ed448:
+    signature:
+      remediation_class: pqc_native
+      target: ML-DSA
+      standard: NIST FIPS 204 (ML-DSA)
+      note: Ed448 signatures are quantum-vulnerable; ML-DSA is a NIST post-quantum signature scheme.
+
+  X448:
+    key_establishment:
+      remediation_class: hybrid
+      target: ML-KEM-based hybrid key establishment
+      standard: NIST FIPS 203 (ML-KEM)
+      note: X448 key agreement is quantum-vulnerable; a hybrid pairing the existing X448 mechanism with ML-KEM at an appropriate parameter set is a defensible migration direction. Parameter selection is an implementation and interoperability decision.
+
+# Symmetric ciphers — classical strengthening, never PQC migration.
+symmetric:
+
+  AES-128:
+    remediation_class: classical_strengthening
+    target: AES-256
+    standard: NIST FIPS 197
+    note: AES-128 remains classically strong, but Grover-style search reduces its effective quantum margin; for long-lived or high-value data, moving to AES-256 is classical strengthening, not a post-quantum migration.
+
+  AES-256:
+    remediation_class: none_required
+    note: AES-256 retains a wide margin against known quantum search attacks; no post-quantum migration is indicated solely by its presence.
+
+  DES:
+    remediation_class: non_quantum_issue
+    note: DES has a 56-bit key and is broken by classical brute force; this is a classical security issue independent of the quantum migration question.
+
+  Triple DES:
+    remediation_class: non_quantum_issue
+    note: Triple DES has a small effective key size and is deprecated; replacing it addresses a classical weakness, not a quantum one.
+
+  ChaCha20:
+    remediation_class: none_required
+    note: ChaCha20 is a strong symmetric cipher; Grover-style search at most halves its effective margin and no post-quantum migration is indicated solely by its presence.
+
+  ChaCha20-Poly1305:
+    remediation_class: none_required
+    note: ChaCha20-Poly1305 is strong authenticated encryption; no post-quantum migration is indicated solely by its presence.
+
+# Hash functions — classical/deprecation guidance, kept separate from PQC.
+hash:
+
+  MD5:
+    remediation_class: non_quantum_issue
+    target: A modern hash such as SHA-256
+    standard: NIST FIPS 180-4
+    note: MD5 is broken by classical collision attacks and unsuitable for signatures or integrity; this is a classical concern, not a post-quantum migration. The appropriate replacement depends on the usage context (for example a SHA-2 or SHA-3 family member), and SHA-256 is not a universal drop-in for every use.
+
+  SHA-1:
+    remediation_class: non_quantum_issue
+    target: A modern hash such as SHA-256
+    standard: NIST FIPS 180-4
+    note: SHA-1 has practical classical collisions and is deprecated; replacing it addresses a classical weakness, not a quantum one. The appropriate replacement depends on the usage context, and SHA-256 is not a universal drop-in for every use.
+
+  SHA-2:
+    remediation_class: none_required
+    note: SHA-2 retains a substantial margin against known quantum search attacks; no replacement is indicated solely by its presence.
+  SHA-256:
+    remediation_class: none_required
+    note: SHA-256 retains a substantial margin against known quantum search attacks; no replacement is indicated solely by its presence.
+  SHA-384:
+    remediation_class: none_required
+    note: SHA-384 retains a substantial margin against known quantum search attacks; no replacement is indicated solely by its presence.
+  SHA-512:
+    remediation_class: none_required
+    note: SHA-512 retains a substantial margin against known quantum search attacks; no replacement is indicated solely by its presence.
+
+# KDF / MAC — no public-key migration indicated.
+kdf_mac:
+
+  HKDF:
+    remediation_class: none_required
+    note: HKDF is a key-derivation function; no post-quantum public-key migration is indicated by its presence. Its assurance follows from the underlying hash.
+  HMAC:
+    remediation_class: none_required
+    note: HMAC is a message-authentication code; no post-quantum public-key migration is indicated by its presence.
+
+# Post-quantum algorithms — already PQC, no classical-to-PQC migration.
+post_quantum:
+
+  ML-KEM:
+    note: ML-KEM (NIST FIPS 203) is a post-quantum key-encapsulation mechanism. No classical-to-PQC migration is indicated by this finding.
+  ML-DSA:
+    note: ML-DSA (NIST FIPS 204) is a post-quantum signature scheme. No classical-to-PQC migration is indicated by this finding.
+  SLH-DSA:
+    note: SLH-DSA (NIST FIPS 205) is a post-quantum signature scheme. No classical-to-PQC migration is indicated by this finding.
+
+# Protocols — protocol-dependent; the negotiated suite is the real question.
+protocols:
+
+  TLS:
+    note: TLS is a protocol; the relevant question is which key-establishment and signature algorithms it negotiates. A bare protocol finding does not establish that, so no concrete migration target can be given from it alone.
+  "TLS 1.2":
+    note: TLS 1.2 commonly negotiates quantum-vulnerable key establishment (ECDHE/RSA), but the specific algorithms depend on the negotiated suite, which this finding does not establish.
+  "TLS 1.3":
+    note: TLS 1.3 key establishment is typically ECDHE and therefore quantum-vulnerable unless a post-quantum or hybrid group is negotiated; TLS 1.3 itself is not quantum-vulnerable, the negotiated group is the relevant question.
+  SSH:
+    note: SSH exposure depends on the negotiated key-exchange and host-key algorithms, which this finding does not establish.

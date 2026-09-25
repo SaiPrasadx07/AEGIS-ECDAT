@@ -1,0 +1,283 @@
+# Aegis PQC — cryptographic library knowledge base
+#
+# Maps package identifiers to the cryptographic capabilities they PROVIDE.
+#
+# READ THIS BEFORE ADDING ENTRIES
+# -------------------------------
+# "provides" means the library MAKES THIS ALGORITHM AVAILABLE. It does not mean
+# the application uses it. A project depending on `cryptography` has RSA
+# available; whether any code calls it is a question only source scanning can
+# answer. The scanner reports the capability and says so explicitly, and the
+# risk engine must weight it below a parsed key or a located call site.
+#
+# Scope is deliberately narrow. This is not an attempt to catalogue every
+# cryptographic package in existence — it covers what PS 26164 cares about and
+# what the demonstration estate contains. An unknown package produces no
+# finding rather than a guess.
+#
+# FIELDS
+#   name              Display name.
+#   ecosystem         pypi | npm | maven | go
+#   provides          Algorithm families the library makes available.
+#   role              key_establishment | signature | symmetric | hash |
+#                     password_hashing | protocol | multi
+#   status            current | deprecated | unmaintained
+#   superseded_by     Replacement package, when status is not current.
+#   min_recommended   Lowest version we will not flag. Omit when not applicable.
+#   advisory          One-line note shown in the UI. State facts, not alarm.
+#   pqc_capable       true only where the library genuinely ships a
+#                     NIST post-quantum algorithm.
+
+pypi:
+
+  cryptography:
+    name: pyca/cryptography
+    ecosystem: pypi
+    provides: [RSA, ECDSA, ECDH, Ed25519, X25519, AES, SHA-2, HMAC, X.509]
+    role: multi
+    status: current
+    min_recommended: 42.0.0
+    advisory: Versions from 49.0.0 also provide ML-KEM (NIST FIPS 203).
+    pqc_capable: false
+
+  pycryptodome:
+    name: PyCryptodome
+    ecosystem: pypi
+    provides: [RSA, DSA, ECDSA, AES, DES, SHA-1, SHA-2, HMAC]
+    role: multi
+    status: current
+    advisory: Provides legacy primitives (DES, SHA-1) alongside current ones.
+    pqc_capable: false
+
+  pycrypto:
+    name: PyCrypto
+    ecosystem: pypi
+    provides: [RSA, DSA, AES, DES, SHA-1]
+    role: multi
+    status: unmaintained
+    superseded_by: pycryptodome
+    advisory: Unmaintained since 2014 with known unpatched vulnerabilities.
+    pqc_capable: false
+
+  pyopenssl:
+    name: pyOpenSSL
+    ecosystem: pypi
+    provides: [RSA, ECDSA, X.509, TLS]
+    role: protocol
+    status: current
+    advisory: Thin wrapper over OpenSSL; capabilities follow the linked libcrypto.
+    pqc_capable: false
+
+  rsa:
+    name: python-rsa
+    ecosystem: pypi
+    provides: [RSA]
+    role: key_establishment
+    status: current
+    advisory: Pure-Python RSA only; no post-quantum path in this library.
+    pqc_capable: false
+
+  ecdsa:
+    name: python-ecdsa
+    ecosystem: pypi
+    provides: [ECDSA, ECDH]
+    role: signature
+    status: current
+    advisory: Pure-Python elliptic curve; constant-time guarantees are limited.
+    pqc_capable: false
+
+  pynacl:
+    name: PyNaCl
+    ecosystem: pypi
+    provides: [Ed25519, X25519, XSalsa20, Poly1305]
+    role: multi
+    status: current
+    pqc_capable: false
+
+  paramiko:
+    name: Paramiko
+    ecosystem: pypi
+    provides: [RSA, ECDSA, Ed25519, SSH]
+    role: protocol
+    status: current
+    pqc_capable: false
+
+  pyjwt:
+    name: PyJWT
+    ecosystem: pypi
+    provides: [RSA, ECDSA, HMAC]
+    role: signature
+    status: current
+    min_recommended: 2.0.0
+    advisory: Releases before 2.0.0 permitted algorithm confusion by default.
+    pqc_capable: false
+
+  m2crypto:
+    name: M2Crypto
+    ecosystem: pypi
+    provides: [RSA, DSA, AES, X.509, TLS]
+    role: multi
+    status: deprecated
+    superseded_by: cryptography
+    advisory: Legacy OpenSSL binding; migration to pyca/cryptography is advised.
+    pqc_capable: false
+
+  bcrypt:
+    name: bcrypt
+    ecosystem: pypi
+    provides: [bcrypt]
+    role: password_hashing
+    status: current
+    advisory: Password hashing; not affected by the quantum key-establishment threat.
+    pqc_capable: false
+
+npm:
+
+  node-forge:
+    name: node-forge
+    ecosystem: npm
+    provides: [RSA, AES, DES, SHA-1, SHA-2, X.509, TLS]
+    role: multi
+    status: current
+    min_recommended: 1.3.0
+    advisory: Releases before 1.3.0 carry known signature-verification issues.
+    pqc_capable: false
+
+  crypto-js:
+    name: crypto-js
+    ecosystem: npm
+    provides: [AES, DES, Triple DES, MD5, SHA-1, SHA-2]
+    role: multi
+    status: current
+    min_recommended: 4.2.0
+    advisory: Default key derivation is weak; provides MD5 and DES.
+    pqc_capable: false
+
+  elliptic:
+    name: elliptic
+    ecosystem: npm
+    provides: [ECDSA, ECDH, Ed25519]
+    role: signature
+    status: current
+    min_recommended: 6.5.4
+    advisory: Earlier releases carry known signature-malleability issues.
+    pqc_capable: false
+
+  jsonwebtoken:
+    name: jsonwebtoken
+    ecosystem: npm
+    provides: [RSA, ECDSA, HMAC]
+    role: signature
+    status: current
+    min_recommended: 9.0.0
+    pqc_capable: false
+
+  tweetnacl:
+    name: TweetNaCl.js
+    ecosystem: npm
+    provides: [Ed25519, X25519, Salsa20, Poly1305]
+    role: multi
+    status: current
+    pqc_capable: false
+
+  node-rsa:
+    name: node-rsa
+    ecosystem: npm
+    provides: [RSA]
+    role: key_establishment
+    status: unmaintained
+    advisory: No releases since 2020.
+    pqc_capable: false
+
+  bcryptjs:
+    name: bcryptjs
+    ecosystem: npm
+    provides: [bcrypt]
+    role: password_hashing
+    status: current
+    advisory: Password hashing; not affected by the quantum key-establishment threat.
+    pqc_capable: false
+
+maven:
+
+  org.bouncycastle:bcprov-jdk15on:
+    name: Bouncy Castle (JDK 1.5 provider)
+    ecosystem: maven
+    provides: [RSA, DSA, ECDSA, ECDH, AES, DES, SHA-1, SHA-2]
+    role: multi
+    status: deprecated
+    superseded_by: org.bouncycastle:bcprov-jdk18on
+    advisory: The jdk15on artefact line is no longer maintained.
+    pqc_capable: false
+
+  org.bouncycastle:bcprov-jdk18on:
+    name: Bouncy Castle (JDK 1.8 provider)
+    ecosystem: maven
+    provides: [RSA, DSA, ECDSA, ECDH, AES, SHA-2, ML-KEM, ML-DSA, SLH-DSA]
+    role: multi
+    status: current
+    min_recommended: 1.78
+    advisory: Recent releases include NIST post-quantum algorithms.
+    pqc_capable: true
+
+  commons-codec:commons-codec:
+    name: Apache Commons Codec
+    ecosystem: maven
+    provides: [MD5, SHA-1, SHA-2, Base64]
+    role: hash
+    status: current
+    advisory: Provides MD5 and SHA-1, both unsuitable for new signatures.
+    pqc_capable: false
+
+  io.jsonwebtoken:jjwt:
+    name: Java JWT
+    ecosystem: maven
+    provides: [RSA, ECDSA, HMAC]
+    role: signature
+    status: current
+    pqc_capable: false
+
+  org.apache.santuario:xmlsec:
+    name: Apache XML Security
+    ecosystem: maven
+    provides: [RSA, DSA, ECDSA, AES, SHA-1]
+    role: multi
+    status: current
+    pqc_capable: false
+
+go:
+
+  golang.org/x/crypto:
+    name: Go supplementary cryptography
+    ecosystem: go
+    provides: [Ed25519, X25519, ChaCha20, Poly1305, bcrypt, SSH]
+    role: multi
+    status: current
+    pqc_capable: false
+
+  github.com/dgrijalva/jwt-go:
+    name: jwt-go
+    ecosystem: go
+    provides: [RSA, ECDSA, HMAC]
+    role: signature
+    status: unmaintained
+    superseded_by: github.com/golang-jwt/jwt
+    advisory: Unmaintained; superseded by the golang-jwt fork.
+    pqc_capable: false
+
+  github.com/golang-jwt/jwt:
+    name: golang-jwt
+    ecosystem: go
+    provides: [RSA, ECDSA, Ed25519, HMAC]
+    role: signature
+    status: current
+    pqc_capable: false
+
+  github.com/cloudflare/circl:
+    name: CIRCL
+    ecosystem: go
+    provides: [ML-KEM, ML-DSA, X25519, Ed25519, ECDH]
+    role: multi
+    status: current
+    advisory: Provides NIST post-quantum algorithms alongside classical ones.
+    pqc_capable: true

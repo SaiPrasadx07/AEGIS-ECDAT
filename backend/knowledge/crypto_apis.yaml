@@ -1,0 +1,655 @@
+# Aegis PQC — cryptographic source API knowledge base
+#
+# Maps source constructs to the cryptographic primitives they reference.
+#
+# SCOPE DISCIPLINE
+# ----------------
+# Entries here must be *structured API constructs* — an import path, a dotted
+# call name, a factory method. Never a bare algorithm name.
+#
+# That rule is what keeps the scanner honest. Matching the bare word "RSA"
+# would fire on comments, README prose, variable names, and unrelated
+# identifiers. Matching `rsa.generate_private_key` fires on a call. The first
+# produces a scanner nobody trusts; the second produces evidence.
+#
+# SECTIONS
+#   modules    Import paths. Evidence level IMPORT — the module is referenced,
+#              which does not establish that anything calls it.
+#   calls      Dotted call expressions. Evidence level CALL_SITE.
+#   constants  Named constants and mode selectors. Evidence level CONFIGURATION.
+#   factories  Methods whose *string argument* names the algorithm, such as
+#              Java's Cipher.getInstance("AES/GCM/NoPadding").
+#
+# FIELDS
+#   algorithm  Canonical algorithm name. Omit when only the string argument
+#              can determine it (factories).
+#   family     Grouping for reporting.
+#   role       key_establishment | signature | symmetric | hash | protocol | kdf
+#   key_size_arg  Keyword argument carrying an explicit key size, when one
+#                 exists. The scanner reads a literal integer or records nothing.
+#   legacy     true where the primitive is unsuitable for new work for reasons
+#              independent of quantum computing (MD5, SHA-1, DES, ECB).
+#   note       One line shown in the UI.
+
+python:
+
+  modules:
+    cryptography.hazmat.primitives.asymmetric.rsa:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+    cryptography.hazmat.primitives.asymmetric.ec:
+      algorithm: ECDSA
+      family: Elliptic curve
+      role: signature
+    cryptography.hazmat.primitives.asymmetric.ed25519:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    cryptography.hazmat.primitives.asymmetric.x25519:
+      algorithm: X25519
+      family: Elliptic curve
+      role: key_establishment
+    cryptography.hazmat.primitives.asymmetric.dsa:
+      algorithm: DSA
+      family: Finite field
+      role: signature
+    cryptography.hazmat.primitives.asymmetric.mlkem:
+      algorithm: ML-KEM
+      family: Module lattice
+      role: key_establishment
+    cryptography.hazmat.primitives.asymmetric.mldsa:
+      algorithm: ML-DSA
+      family: Module lattice
+      role: signature
+    cryptography.hazmat.primitives.ciphers.aead:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    cryptography.hazmat.primitives.kdf.hkdf:
+      algorithm: HKDF
+      family: KDF
+      role: kdf
+    hashlib:
+      family: Hash
+      role: hash
+      note: Generic hashing module; the specific algorithm follows from the call.
+    hmac:
+      algorithm: HMAC
+      family: MAC
+      role: hash
+    ssl:
+      algorithm: TLS
+      family: Protocol
+      role: protocol
+    Crypto.Cipher.AES:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    Crypto.Cipher.DES:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    Crypto.Cipher.DES3:
+      algorithm: Triple DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    Crypto.PublicKey.RSA:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+    Crypto.Hash.MD5:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+    nacl.public:
+      algorithm: X25519
+      family: Elliptic curve
+      role: key_establishment
+    nacl.signing:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+
+  calls:
+    rsa.generate_private_key:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+      key_size_arg: key_size
+    ec.generate_private_key:
+      algorithm: ECDSA
+      family: Elliptic curve
+      role: signature
+    ed25519.Ed25519PrivateKey.generate:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    x25519.X25519PrivateKey.generate:
+      algorithm: X25519
+      family: Elliptic curve
+      role: key_establishment
+    dsa.generate_private_key:
+      algorithm: DSA
+      family: Finite field
+      role: signature
+      key_size_arg: key_size
+    MLKEM768PrivateKey.generate:
+      algorithm: ML-KEM-768
+      family: Module lattice
+      role: key_establishment
+    MLKEM1024PrivateKey.generate:
+      algorithm: ML-KEM-1024
+      family: Module lattice
+      role: key_establishment
+    AESGCM:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: GCM
+    AESCCM:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: CCM
+    hashlib.md5:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+      note: MD5 is unsuitable for signatures or integrity; unrelated to quantum risk.
+    hashlib.sha1:
+      algorithm: SHA-1
+      family: Hash
+      role: hash
+      legacy: true
+    hashlib.sha256:
+      algorithm: SHA-256
+      family: Hash
+      role: hash
+    hashlib.sha384:
+      algorithm: SHA-384
+      family: Hash
+      role: hash
+    hashlib.sha512:
+      algorithm: SHA-512
+      family: Hash
+      role: hash
+    HKDF:
+      algorithm: HKDF
+      family: KDF
+      role: kdf
+    RSA.generate:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+      key_size_arg: bits
+    DES.new:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    DES3.new:
+      algorithm: Triple DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    AES.new:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    ssl.create_default_context:
+      algorithm: TLS
+      family: Protocol
+      role: protocol
+
+  constants:
+    AES.MODE_ECB:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: ECB
+      legacy: true
+      note: ECB leaks plaintext structure and is unsuitable for confidentiality.
+    AES.MODE_CBC:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: CBC
+    AES.MODE_GCM:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: GCM
+    DES.MODE_ECB:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      mode: ECB
+      legacy: true
+
+javascript:
+
+  modules:
+    crypto:
+      family: Multi
+      role: multi
+      note: Node built-in; the specific algorithm follows from the call.
+    node-forge:
+      family: Multi
+      role: multi
+    elliptic:
+      algorithm: ECDSA
+      family: Elliptic curve
+      role: signature
+    tweetnacl:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    jsonwebtoken:
+      family: Signature
+      role: signature
+    crypto-js:
+      family: Multi
+      role: multi
+    tls:
+      algorithm: TLS
+      family: Protocol
+      role: protocol
+
+  calls:
+    crypto.generateKeyPairSync:
+      family: Multi
+      role: key_establishment
+      key_size_arg: modulusLength
+      note: Algorithm is given by the first argument.
+    crypto.createHash:
+      family: Hash
+      role: hash
+      note: Algorithm is given by the string argument.
+    crypto.createCipheriv:
+      family: Block cipher
+      role: symmetric
+      note: Algorithm and mode are given by the string argument.
+    crypto.createSign:
+      family: Signature
+      role: signature
+    crypto.createDiffieHellman:
+      algorithm: Diffie-Hellman
+      family: Finite field
+      role: key_establishment
+    CryptoJS.MD5:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+    CryptoJS.SHA1:
+      algorithm: SHA-1
+      family: Hash
+      role: hash
+      legacy: true
+    CryptoJS.SHA256:
+      algorithm: SHA-256
+      family: Hash
+      role: hash
+    CryptoJS.AES.encrypt:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    CryptoJS.DES.encrypt:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    forge.pki.rsa.generateKeyPair:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+      key_size_arg: bits
+    nacl.sign.keyPair:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    nacl.box.keyPair:
+      algorithm: X25519
+      family: Elliptic curve
+      role: key_establishment
+
+java:
+
+  modules:
+    javax.crypto:
+      family: Multi
+      role: multi
+    java.security:
+      family: Multi
+      role: multi
+    org.bouncycastle:
+      family: Multi
+      role: multi
+
+  factories:
+    Cipher.getInstance:
+      family: Block cipher
+      role: symmetric
+    MessageDigest.getInstance:
+      family: Hash
+      role: hash
+    Signature.getInstance:
+      family: Signature
+      role: signature
+    KeyPairGenerator.getInstance:
+      family: Multi
+      role: key_establishment
+    KeyAgreement.getInstance:
+      family: Multi
+      role: key_establishment
+    KeyGenerator.getInstance:
+      family: Block cipher
+      role: symmetric
+    SecretKeyFactory.getInstance:
+      family: KDF
+      role: kdf
+    SSLContext.getInstance:
+      family: Protocol
+      role: protocol
+
+  calls:
+    KeyPairGenerator.initialize:
+      family: Multi
+      role: key_establishment
+      note: Carries the key size for the generator created above.
+
+go:
+
+  modules:
+    crypto/rsa:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+    crypto/ecdsa:
+      algorithm: ECDSA
+      family: Elliptic curve
+      role: signature
+    crypto/ed25519:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    crypto/aes:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    crypto/des:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    crypto/cipher:
+      family: Block cipher
+      role: symmetric
+    crypto/sha256:
+      algorithm: SHA-256
+      family: Hash
+      role: hash
+    crypto/sha512:
+      algorithm: SHA-512
+      family: Hash
+      role: hash
+    crypto/sha1:
+      algorithm: SHA-1
+      family: Hash
+      role: hash
+      legacy: true
+    crypto/md5:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+    crypto/tls:
+      algorithm: TLS
+      family: Protocol
+      role: protocol
+    crypto/elliptic:
+      algorithm: ECDH
+      family: Elliptic curve
+      role: key_establishment
+    golang.org/x/crypto/chacha20poly1305:
+      algorithm: ChaCha20-Poly1305
+      family: Stream cipher
+      role: symmetric
+    golang.org/x/crypto/curve25519:
+      algorithm: X25519
+      family: Elliptic curve
+      role: key_establishment
+    golang.org/x/crypto/ssh:
+      algorithm: SSH
+      family: Protocol
+      role: protocol
+    github.com/cloudflare/circl/kem/mlkem:
+      algorithm: ML-KEM
+      family: Module lattice
+      role: key_establishment
+    github.com/cloudflare/circl/sign/mldsa:
+      algorithm: ML-DSA
+      family: Module lattice
+      role: signature
+
+  calls:
+    rsa.GenerateKey:
+      algorithm: RSA
+      family: RSA
+      role: key_establishment
+      key_size_arg: positional_2
+    ecdsa.GenerateKey:
+      algorithm: ECDSA
+      family: Elliptic curve
+      role: signature
+    ed25519.GenerateKey:
+      algorithm: Ed25519
+      family: Elliptic curve
+      role: signature
+    aes.NewCipher:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+    des.NewCipher:
+      algorithm: DES
+      family: Block cipher
+      role: symmetric
+      legacy: true
+    cipher.NewGCM:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: GCM
+    cipher.NewCBCEncrypter:
+      algorithm: AES
+      family: Block cipher
+      role: symmetric
+      mode: CBC
+    sha256.New:
+      algorithm: SHA-256
+      family: Hash
+      role: hash
+    sha256.Sum256:
+      algorithm: SHA-256
+      family: Hash
+      role: hash
+    sha1.New:
+      algorithm: SHA-1
+      family: Hash
+      role: hash
+      legacy: true
+    md5.New:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+    md5.Sum:
+      algorithm: MD5
+      family: Hash
+      role: hash
+      legacy: true
+    tls.Config:
+      algorithm: TLS
+      family: Protocol
+      role: protocol
+    mlkem768.Scheme:
+      algorithm: ML-KEM-768
+      family: Module lattice
+      role: key_establishment
+
+# Algorithm strings appearing inside factory arguments and cipher specifications.
+# Java writes "AES/GCM/NoPadding"; Node writes "aes-256-cbc"; both resolve here.
+algorithm_strings:
+  AES:
+    algorithm: AES
+    family: Block cipher
+    role: symmetric
+  DES:
+    algorithm: DES
+    family: Block cipher
+    role: symmetric
+    legacy: true
+  DESede:
+    algorithm: Triple DES
+    family: Block cipher
+    role: symmetric
+    legacy: true
+  RSA:
+    algorithm: RSA
+    family: RSA
+    role: key_establishment
+  DSA:
+    algorithm: DSA
+    family: Finite field
+    role: signature
+  EC:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  ECDSA:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  ECDH:
+    algorithm: ECDH
+    family: Elliptic curve
+    role: key_establishment
+  DiffieHellman:
+    algorithm: Diffie-Hellman
+    family: Finite field
+    role: key_establishment
+  Ed25519:
+    algorithm: Ed25519
+    family: Elliptic curve
+    role: signature
+  X25519:
+    algorithm: X25519
+    family: Elliptic curve
+    role: key_establishment
+  MD5:
+    algorithm: MD5
+    family: Hash
+    role: hash
+    legacy: true
+  SHA-1:
+    algorithm: SHA-1
+    family: Hash
+    role: hash
+    legacy: true
+  SHA1:
+    algorithm: SHA-1
+    family: Hash
+    role: hash
+    legacy: true
+  SHA-256:
+    algorithm: SHA-256
+    family: Hash
+    role: hash
+  SHA256:
+    algorithm: SHA-256
+    family: Hash
+    role: hash
+  SHA-384:
+    algorithm: SHA-384
+    family: Hash
+    role: hash
+  SHA-512:
+    algorithm: SHA-512
+    family: Hash
+    role: hash
+  SHA512:
+    algorithm: SHA-512
+    family: Hash
+    role: hash
+  ChaCha20:
+    algorithm: ChaCha20
+    family: Stream cipher
+    role: symmetric
+  ChaCha20-Poly1305:
+    algorithm: ChaCha20-Poly1305
+    family: Stream cipher
+    role: symmetric
+  SHA256withRSA:
+    algorithm: RSA
+    family: RSA
+    role: signature
+  SHA1withRSA:
+    algorithm: RSA
+    family: RSA
+    role: signature
+    legacy: true
+    note: The SHA-1 digest makes this signature construction unsuitable; RSA itself is quantum-vulnerable, which is a separate concern.
+  SHA256withECDSA:
+    algorithm: ECDSA
+    family: Elliptic curve
+    role: signature
+  MD5withRSA:
+    algorithm: RSA
+    family: RSA
+    role: signature
+    legacy: true
+    note: The MD5 digest makes this signature construction unsuitable; RSA itself is quantum-vulnerable, which is a separate concern.
+  TLS:
+    algorithm: TLS
+    family: Protocol
+    role: protocol
+  TLSv1.2:
+    algorithm: TLS 1.2
+    family: Protocol
+    role: protocol
+  TLSv1.3:
+    algorithm: TLS 1.3
+    family: Protocol
+    role: protocol
+  ML-KEM-768:
+    algorithm: ML-KEM-768
+    family: Module lattice
+    role: key_establishment
+  ML-DSA-65:
+    algorithm: ML-DSA-65
+    family: Module lattice
+    role: signature
+
+# Modes appearing in cipher specification strings. ECB is flagged because it is
+# unsuitable for confidentiality, independent of any quantum consideration.
+cipher_modes:
+  ECB:
+    mode: ECB
+    legacy: true
+  CBC:
+    mode: CBC
+  GCM:
+    mode: GCM
+  CTR:
+    mode: CTR
+  CFB:
+    mode: CFB
+  OFB:
+    mode: OFB
+  CCM:
+    mode: CCM
