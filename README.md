@@ -2,6 +2,10 @@
 
 **Enterprise Cryptographic Discovery & Analysis Tool**
 
+🚀 **[Live Demo](https://aegis-ecdat.streamlit.app/)** ·
+📦 **[GitHub Repository](https://github.com/SaiPrasadx07/AEGIS-ECDAT)** ·
+🏷️ **[v1.0.0 Release](https://github.com/SaiPrasadx07/AEGIS-ECDAT/releases/tag/v1.0.0)**
+
 Smart India Hackathon 2026 · Problem Statement **26164** · NTRO
 Theme: Blockchain & Cybersecurity · Team: **Quantum Shield**
 
